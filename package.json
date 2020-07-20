@@ -1,17 +1,18 @@
 {
-  "name": "node-V2.0",
-  "version": "1.0.0",
+  "name": "node-v2.0",
+  "version": "1.0.1",
   "description": "revise Complete Nodejs",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js",
     "start-server": "node app.js",
-    "dev": "nodemon app.js -e js,ejs"
+    "dev": "env-cmd -f ./config/dev.env nodemon app.js -e js,ejs"
   },
   "author": "yogesh mishra",
   "license": "ISC",
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "eslint": "^7.5.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^6.11.0",
@@ -26,7 +27,8 @@
   "dependencies": {
     "ejs": "^2.6.1",
     "express": "^4.16.3",
-    "express-handlebars": "^3.0.0",
-    "pug": "^2.0.3"
+    "mongodb": "^3.5.9",
+    "mongoose": "^5.9.25",
+    "morgan": "^1.10.0"
   }
 }

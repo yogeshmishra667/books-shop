@@ -1,18 +1,31 @@
 const Product = require('../models/product');
 
-const getProducts = (req, res, next) => {
-  const products = new Product(req.body.title);
+const getProducts = async (req, res, next) => {
+  const products = await Product.find({});
   res.render('shop/list-product', {
-    prods: products.fetchAll(),
+    prods: products,
     pageTitle: 'All Products',
     path: '/products',
   });
 };
+//for single product
+const getProduct = async (req, res, next) => {
+  const prodId = req.params.productId;
+  const product = await Product.findById(prodId);
+  if (product) {
+    res.render('shop/product-detail', {
+      product: product,
+      pageTitle: product.title,
+      path: '/products',
+    });
+  }
+  return console.log('error');
+};
 
-const getIndex = (req, res, next) => {
-  const products = new Product(req.body.title);
+const getIndex = async (req, res, next) => {
+  const products = await Product.find({});
   res.render('shop/index', {
-    prods: products.fetchAll(),
+    prods: products,
     pageTitle: 'Shop',
     path: '/',
   });
@@ -43,6 +56,7 @@ const getCheckout = (req, res, next) => {
 };
 module.exports = {
   getProducts,
+  getProduct,
   getShopCart,
   getOrder,
   getIndex,

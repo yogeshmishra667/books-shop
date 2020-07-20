@@ -1,17 +1,12 @@
-const product = [];
+const mongoose = require('mongoose');
 
-module.exports = class Product {
-  constructor(t) {
-    this.title = t;
-  }
+const productSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  price: { type: Number, default: 0, required: true },
+  description: { type: String, required: true },
+  imageUrl: { type: String, required: true },
+});
 
-  save() {
-    //save data in product array
-    product.push(this);
-  }
+const Product = mongoose.model('Product', productSchema);
 
-  fetchAll() {
-    //get data from product array
-    return product;
-  }
-};
+module.exports = Product;
