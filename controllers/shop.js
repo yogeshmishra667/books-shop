@@ -1,17 +1,50 @@
-const productData = require('../controllers/product');
+const Product = require('../models/product');
 
-const getShop = (req, res, next) => {
-  const products = productData.products;
-  res.render('shop', {
-    prods: products,
-    pageTitle: 'Shop',
-    path: '/',
-    hasProducts: products.length > 0,
-    activeShop: true,
-    productCSS: true,
+const getProducts = (req, res, next) => {
+  const products = new Product(req.body.title);
+  res.render('shop/list-product', {
+    prods: products.fetchAll(),
+    pageTitle: 'All Products',
+    path: '/products',
   });
 };
 
+const getIndex = (req, res, next) => {
+  const products = new Product(req.body.title);
+  res.render('shop/index', {
+    prods: products.fetchAll(),
+    pageTitle: 'Shop',
+    path: '/',
+  });
+};
+
+// cart
+const getShopCart = (req, res, next) => {
+  res.render('shop/cart', {
+    pageTitle: 'Cart',
+    path: '/cart',
+  });
+};
+
+// order
+const getOrder = (req, res, next) => {
+  res.render('shop/orders', {
+    pageTitle: 'Cart',
+    path: '/orders',
+  });
+};
+
+// order
+const getCheckout = (req, res, next) => {
+  res.render('shop/checkout', {
+    pageTitle: 'Cart',
+    path: '/checkout',
+  });
+};
 module.exports = {
-  getShop,
+  getProducts,
+  getShopCart,
+  getOrder,
+  getIndex,
+  getCheckout,
 };
