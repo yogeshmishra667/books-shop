@@ -5,6 +5,7 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, default: 0, required: true },
   description: { type: String, required: true },
   imageUrl: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 
 const Product = mongoose.model('Product', productSchema);

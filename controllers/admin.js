@@ -10,13 +10,17 @@ const getAddProduct = (req, res, next) => {
 
 //for admin  post add product
 const postAddProduct = async (req, res, next) => {
-  const product = new Product(req.body);
-  const newProduct = await product.save();
-  if (newProduct) {
-    console.log('Created Product');
-    res.redirect('/admin/products');
+  const product = new Product({ ...req.body, userId: req.user._id });
+  try {
+    const newProduct = await product.save();
+    if (newProduct) {
+      console.log('Created Product');
+      res.redirect('/admin/products');
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(error);
   }
-  return res.status(500).send({ message: ' Error in Creating Product.' });
 };
 
 //for get admin products
