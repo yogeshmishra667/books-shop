@@ -76,11 +76,18 @@ const postCartDeleteProduct = async (req, res, next) => {
   }
 };
 // for get => order
-const getOrder = (req, res, next) => {
-  res.render('shop/orders', {
-    pageTitle: 'Cart',
-    path: '/orders',
-  });
+const getOrder = async (req, res, next) => {
+  const orders = await Order.find({ 'user.userId': req.user._id });
+  try {
+    res.render('shop/orders', {
+      path: '/orders',
+      pageTitle: 'Your Orders',
+      orders: orders,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(401).send(error);
+  }
 };
 
 //for post => order
@@ -100,11 +107,11 @@ const postOrder = async (req, res, next) => {
     });
     const result = await order.save();
     if (result) {
-      res.redirect('/orders');
+      return req.user.clearCart() && res.redirect('/orders');
     }
   } catch (error) {
     console.log(error);
-    res.status(401).send(error);
+    return res.status(401).send(error);
   }
 };
 
