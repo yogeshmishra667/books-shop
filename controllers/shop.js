@@ -1,7 +1,7 @@
 const Product = require('../models/product');
 
 const getProducts = async (req, res, next) => {
-  const products = await Product.find({});
+  const products = await Product.find();
   res.render('shop/list-product', {
     prods: products,
     pageTitle: 'All Products',
@@ -12,14 +12,16 @@ const getProducts = async (req, res, next) => {
 const getProduct = async (req, res, next) => {
   const prodId = req.params.productId;
   const product = await Product.findById(prodId);
-  if (product) {
+  try {
     res.render('shop/product-detail', {
       product: product,
       pageTitle: product.title,
       path: '/products',
     });
+  } catch (error) {
+    console.log(error);
+    return error;
   }
-  return console.log('error');
 };
 
 const getIndex = async (req, res, next) => {
@@ -32,11 +34,32 @@ const getIndex = async (req, res, next) => {
 };
 
 // cart
-const getShopCart = (req, res, next) => {
-  res.render('shop/cart', {
-    pageTitle: 'Cart',
-    path: '/cart',
-  });
+
+const getShopCart = async (req, res, next) => {
+  const products = await req.user;
+  console.log(products);
+  //user.cart.items;
+  try {
+    res.render('shop/cart', {
+      path: '/cart',
+      pageTitle: 'Your Cart',
+      products: products,
+    });
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+// for post => Cart
+const postCart = async (req, res, next) => {
+  const prodId = req.body.productId;
+  const product = await Product.findById(prodId);
+  try {
+    return req.user.addToCart(product) && res.redirect('/cart');
+  } catch (error) {
+    return res.status(401).send(error) && console.log(error);
+  }
 };
 
 // order
@@ -58,6 +81,7 @@ module.exports = {
   getProducts,
   getProduct,
   getShopCart,
+  postCart,
   getOrder,
   getIndex,
   getCheckout,
