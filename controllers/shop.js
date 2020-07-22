@@ -36,14 +36,13 @@ const getIndex = async (req, res, next) => {
 // cart
 
 const getShopCart = async (req, res, next) => {
-  const products = await req.user;
-  console.log(products);
-  //user.cart.items;
+  const user = await req.user.populate('cart.items.productId').execPopulate();
+  const product = user.cart.items; //do console
   try {
     res.render('shop/cart', {
       path: '/cart',
       pageTitle: 'Your Cart',
-      products: products,
+      products: product,
     });
   } catch (error) {
     console.log(error);
