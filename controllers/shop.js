@@ -36,8 +36,10 @@ const getIndex = async (req, res, next) => {
 // cart
 
 const getShopCart = async (req, res, next) => {
-  const user = await req.user.populate('cart.items.productId').execPopulate();
-  const product = user.cart.items; //do console
+  const data = await req.user.populate('cart.items.productId').execPopulate();
+  /* ☝ this line populate (add & fetch) data from product model because of ref  data = cart:{items:[object]} this object is product data if want fetch data then {data.cart.items ==> (object data)}*/
+
+  const product = data.cart.items; //do console
   try {
     res.render('shop/cart', {
       path: '/cart',
@@ -61,6 +63,17 @@ const postCart = async (req, res, next) => {
   }
 };
 
+//for post => delete cart items
+const postCartDeleteProduct = async (req, res, next) => {
+  const prodId = req.body.productId;
+  await req.user.removeFromCart(prodId);
+  try {
+    res.redirect('/cart');
+  } catch (error) {
+    console.log(error);
+    return res.status(401).send(error);
+  }
+};
 // order
 const getOrder = (req, res, next) => {
   res.render('shop/orders', {
@@ -81,6 +94,7 @@ module.exports = {
   getProduct,
   getShopCart,
   postCart,
+  postCartDeleteProduct,
   getOrder,
   getIndex,
   getCheckout,
