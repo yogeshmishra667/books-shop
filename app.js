@@ -30,11 +30,20 @@ app.use(
   })
 );
 
-//for user id  and add in product
+//create user based on session data
 app.use(async (req, res, next) => {
-  const user = await User.findById('5f1719f67fff692414cd043d');
-  req.user = user;
-  next();
+  //if [req.session.user] not found simply next
+  if (!req.session.user) {
+    return next();
+  }
+  try {
+    const user = await User.findById(req.session.user._id);
+    req.user = user;
+    next();
+  } catch (error) {
+    console.log(error);
+    res.status(401).send(error);
+  }
 });
 
 //Set Public Folder 🗄
