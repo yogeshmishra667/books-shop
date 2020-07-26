@@ -1,6 +1,4 @@
 const getLogin = (req, res, next) => {
-  // console.log(req.get('Cookie'));
-  // const isLoggedIn = req.get('Cookie').split(';')[1].trim().split('=')[1];
   console.log(req.session.isLoggedIn);
   res.render('auth/login', {
     path: '/login',
@@ -13,4 +11,10 @@ const postLogin = (req, res, next) => {
   res.redirect('/');
 };
 
-module.exports = { getLogin, postLogin };
+const postLogout = (req, res, next) => {
+  req.session.destroy((error) => {
+    res.redirect('/');
+    res.status(404).send(error);
+  });
+};
+module.exports = { getLogin, postLogin, postLogout };
