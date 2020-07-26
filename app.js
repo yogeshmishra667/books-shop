@@ -28,6 +28,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 //routes
 app.use('/admin', require('./routes/admin'));
 app.use(require('./routes/shop'));
+app.use(require('./routes/auth'));
 app.use(require('./controllers/user'));
 app.use(require('./controllers/error'));
 
