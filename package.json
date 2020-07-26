@@ -25,6 +25,7 @@
     "prettier": "^2.0.5"
   },
   "dependencies": {
+    "connect-mongo": "^3.2.0",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
     "express-session": "^1.17.1",

@@ -1,5 +1,7 @@
 const path = require('path');
 const express = require('express');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
 const morgan = require('morgan');
 require('./utils/database');
 const User = require('./models/user');
@@ -14,6 +16,19 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(morgan('dev'));
+
+//for session and cookie
+app.use(
+  session({
+    secret: 'yogeshmishrashop',
+    resave: false,
+    saveUninitialized: false,
+    store: new MongoStore({
+      url: process.env.MONGODB_URL,
+      collection: 'session',
+    }),
+  })
+);
 
 //for user id  and add in product
 app.use(async (req, res, next) => {
