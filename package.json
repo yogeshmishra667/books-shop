@@ -25,6 +25,7 @@
     "prettier": "^2.0.5"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "connect-mongo": "^3.2.0",
     "ejs": "^2.6.1",
     "express": "^4.16.3",

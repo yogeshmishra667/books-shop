@@ -2,6 +2,7 @@
 <header class="main-header">
   <button id="side-menu-toggle">Menu</button>
   <nav class="main-header__nav">
+    <h1>Yo-books</h1>
     <ul class="main-header__item-list">
       <li class="main-header__item">
         <a class="<%= path === '/' ? 'active' : '' %>" href="/">Shop</a>
@@ -41,6 +42,9 @@
       <% if (!isAuthenticated) { %>
       <li class="main-header__item">
         <a href="/login">Login</a>
+      </li>
+      <li class="main-header__item">
+        <a class="<%= path === '/signup' ? 'active' : '' %>" href="/signup">Signup</a>
       </li>
       <% } else { %>
       <li class="main-header__item">
