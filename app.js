@@ -6,6 +6,7 @@ const morgan = require('morgan');
 require('./utils/database');
 const User = require('./models/user');
 const csrf = require('csurf');
+const flash = require('connect-flash');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use(
 );
 
 app.use(csrfProtection);
+app.use(flash());
 
 //create user based on session data
 app.use(async (req, res, next) => {

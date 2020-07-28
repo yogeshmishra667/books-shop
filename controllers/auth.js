@@ -2,19 +2,32 @@ const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 
 const getLogin = (req, res, next) => {
+  //because error style not hide automatic
+  let message = req.flash('error');
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    isAuthenticated: false,
+    errorMessage: message,
   });
 };
 
 //for get => signup -->register
 const getSignup = (req, res, next) => {
+  let message = req.flash('error');
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'Signup',
-    isAuthenticated: false,
+    errorMessage: message,
   });
 };
 
@@ -22,8 +35,10 @@ const postLogin = async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = await User.findOne({ email });
+
   try {
     const doMatch = await bcrypt.compare(password, user.password);
+
     if (doMatch) {
       req.session.isLoggedIn = true;
       req.session.user = user;
@@ -34,9 +49,8 @@ const postLogin = async (req, res, next) => {
       });
     }
   } catch (error) {
-    res.redirect('/login');
-    res.status(404).send(error);
-    console.log(error);
+    req.flash('error', 'invalid username or password!');
+    return res.redirect('/login');
   }
 };
 
@@ -44,6 +58,7 @@ const postLogin = async (req, res, next) => {
 const postSignup = async (req, res, next) => {
   const existUser = await User.findOne({ email: req.body.email });
   if (existUser) {
+    req.flash('error', 'email already exist please pick another one!');
     return res.redirect('/signup');
   }
   try {
