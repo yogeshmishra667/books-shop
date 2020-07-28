@@ -1,15 +1,18 @@
 const express = require('express');
 const router = express.Router();
+const isAuth = require('../middleware/is-auth');
 const ctrl = require('../controllers/admin');
 
+// ⚠ request always travel left to right
+
 // /admin/add-product => GET
-router.get('/add-product', ctrl.getAddProduct);
+router.get('/add-product', isAuth, ctrl.getAddProduct);
 // /admin/products => GET
-router.get('/products', ctrl.getProducts);
+router.get('/products', isAuth, ctrl.getProducts);
 // /admin/add-product => POST
-router.post('/add-product', ctrl.postAddProduct);
-router.get('/edit-product/:productId', ctrl.getEditProduct);
-router.post('/edit-product/', ctrl.postEditProduct);
-router.post('/delete-product', ctrl.postDeleteProduct);
+router.post('/add-product', isAuth, ctrl.postAddProduct);
+router.get('/edit-product/:productId', isAuth, ctrl.getEditProduct);
+router.post('/edit-product/', isAuth, ctrl.postEditProduct);
+router.post('/delete-product', isAuth, ctrl.postDeleteProduct);
 
 module.exports = router;

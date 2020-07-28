@@ -5,6 +5,8 @@ const MongoStore = require('connect-mongo')(session);
 const morgan = require('morgan');
 require('./utils/database');
 const User = require('./models/user');
+const csrf = require('csurf');
+
 const app = express();
 
 // Load View Engine🎑
@@ -16,6 +18,9 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(morgan('dev'));
+
+// for csrf protection
+const csrfProtection = csrf();
 
 //for session and cookie
 app.use(
@@ -29,6 +34,8 @@ app.use(
     }),
   })
 );
+
+app.use(csrfProtection);
 
 //create user based on session data
 app.use(async (req, res, next) => {
@@ -48,6 +55,13 @@ app.use(async (req, res, next) => {
 
 //Set Public Folder 🗄
 app.use(express.static(path.join(__dirname, 'public')));
+
+//for pass local variable in view
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 
 //routes
 app.use('/admin', require('./routes/admin'));
