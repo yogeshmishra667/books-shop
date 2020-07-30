@@ -195,9 +195,6 @@ const getNewPassword = async (req, res, next) => {
 
 //for post ==> reset password
 const postNewPassword = async (req, res, next) => {
-  // const newPassword = req.body.password;
-  // const userId = req.body.userId;
-  // const passwordToken = req.body.passwordToken;
   const { password, userId, passwordToken } = req.body;
 
   const user = await User.findOne({
@@ -212,6 +209,27 @@ const postNewPassword = async (req, res, next) => {
     const result = await user.save();
     if (result) {
       res.redirect('/login');
+
+      //send mail after reset password
+
+      await transporter.sendMail(
+        {
+          to: user.email,
+          from: 'yogijs667@gmail.com',
+          subject: 'Password reset successfully',
+          html: `
+            <p>Your password reset successfully</p>
+            <p>hey ${user.email} your login password has been changed</p>
+          `,
+        },
+        (err, info) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('Message sent: ' + info.response);
+          }
+        }
+      );
     }
   } catch (error) {
     console.log(error);
