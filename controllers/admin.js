@@ -25,7 +25,8 @@ const postAddProduct = async (req, res, next) => {
 
 //for get admin products
 const getProducts = async (req, res, next) => {
-  const products = await Product.find();
+  const products = await Product.find({ userId: req.user._id });
+  //only show admin product for authenticated user whose create product
   try {
     //console.log(products);
     res.render('admin/products', {
@@ -61,6 +62,10 @@ const getEditProduct = async (req, res, next) => {
 //for post => admin edit products
 const postEditProduct = async (req, res, next) => {
   const product = await Product.findById(req.body.productId);
+  if (product.userId.toString() !== req.user._id.toString()) {
+    //toString because also checking type
+    return res.redirect('/');
+  }
   try {
     product.title = req.body.title;
     product.price = req.body.price;
@@ -77,7 +82,9 @@ const postEditProduct = async (req, res, next) => {
 };
 //for post => delete admin product
 const postDeleteProduct = async (req, res, next) => {
-  await Product.findByIdAndRemove(req.body.productId);
+  const prodId = req.body.productId;
+  await Product.deleteOne({ _id: prodId, userId: req.user._id });
+  //assign userId for delete only whose user Created
   try {
     console.log('DESTROYED PRODUCT');
     res.status(201).redirect('/admin/products');
