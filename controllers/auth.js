@@ -1,6 +1,17 @@
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const sgTransport = require('nodemailer-sendgrid-transport');
 
+//for sending email
+const transporter = nodemailer.createTransport(
+  sgTransport({
+    auth: {
+      api_key: process.env.SENDGRID_API_KEY,
+    },
+  })
+);
 const getLogin = (req, res, next) => {
   //because error style not hide automatic
   let message = req.flash('error');
@@ -66,6 +77,21 @@ const postSignup = async (req, res, next) => {
     const result = await user.save();
     if (result) {
       res.redirect('/login');
+      return await transporter.sendMail(
+        {
+          to: user.email,
+          from: 'yogijs667@gmail.com',
+          subject: 'signup succeed!',
+          html: '<h1>you successfully signup</h1>',
+        },
+        (err, info) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('Message sent: ' + info.response);
+          }
+        }
+      );
     }
   } catch (error) {
     console.log(error);
@@ -79,4 +105,71 @@ const postLogout = (req, res, next) => {
     res.status(404).send(error);
   });
 };
-module.exports = { getLogin, getSignup, postLogin, postSignup, postLogout };
+
+//for reset password
+
+const getReset = async (req, res, next) => {
+  let message = req.flash('error');
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
+  res.render('auth/reset', {
+    path: '/reset',
+    pageTitle: 'Reset Password',
+    errorMessage: message,
+  });
+};
+
+const postReset = async (req, res, next) => {
+  //generate random token
+  crypto.randomBytes(32, async (err, buffer) => {
+    if (err) {
+      console.log(err);
+      return res.redirect('/reset');
+    }
+    const token = buffer.toString('hex');
+    const user = await User.findOne({ email: req.body.email });
+    try {
+      user.resetToken = token;
+      user.resetTokenExpiration = Date.now() + 3600000;
+      //save updated user
+      const result = await user.save();
+      if (result) {
+        res.redirect('/');
+        await transporter.sendMail(
+          {
+            to: req.body.email,
+            from: 'yogijs667@gmail.com',
+            subject: 'Password reset',
+            html: `
+            <p>You requested a password reset</p>
+            <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to set a new password.</p>
+          `,
+          },
+          (err, info) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log('Message sent: ' + info.response);
+            }
+          }
+        );
+      }
+    } catch (error) {
+      req.flash('error', 'No account with that email found.');
+      return res.redirect('/reset');
+    }
+  });
+};
+
+module.exports = {
+  getLogin,
+  getSignup,
+  postLogin,
+  postSignup,
+  postLogout,
+  getReset,
+  postReset,
+};
