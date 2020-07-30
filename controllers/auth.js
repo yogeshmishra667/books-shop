@@ -164,6 +164,60 @@ const postReset = async (req, res, next) => {
   });
 };
 
+//for => get ==> reset password
+const getNewPassword = async (req, res, next) => {
+  const token = req.params.token;
+  const user = await User.findOne({
+    resetToken: token,
+    resetTokenExpiration: { $gt: Date.now() },
+  });
+  try {
+    if (user) {
+      let message = req.flash('error');
+      if (message.length > 0) {
+        message = message[0];
+      } else {
+        message = null;
+      }
+      res.render('auth/new-password', {
+        path: '/new-password',
+        pageTitle: 'New Password',
+        errorMessage: message,
+        //userId and passwordToken for for access in post request (req.body)
+        userId: user._id.toString(),
+        passwordToken: token,
+      });
+    }
+  } catch (error) {
+    console.log(err);
+  }
+};
+
+//for post ==> reset password
+const postNewPassword = async (req, res, next) => {
+  // const newPassword = req.body.password;
+  // const userId = req.body.userId;
+  // const passwordToken = req.body.passwordToken;
+  const { password, userId, passwordToken } = req.body;
+
+  const user = await User.findOne({
+    resetToken: passwordToken,
+    resetTokenExpiration: { $gt: Date.now() },
+    _id: userId,
+  });
+  try {
+    user.password = password; //password ==> new password
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
+    const result = await user.save();
+    if (result) {
+      res.redirect('/login');
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
   getLogin,
   getSignup,
@@ -172,4 +226,6 @@ module.exports = {
   postLogout,
   getReset,
   postReset,
+  getNewPassword,
+  postNewPassword,
 };
