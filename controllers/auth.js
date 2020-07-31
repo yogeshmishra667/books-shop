@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const sgTransport = require('nodemailer-sendgrid-transport');
+const { validationResult } = require('express-validator');
 
 //for sending email
 const transporter = nodemailer.createTransport(
@@ -24,6 +25,11 @@ const getLogin = (req, res, next) => {
     path: '/login',
     pageTitle: 'Login',
     errorMessage: message,
+    //show input data after error
+    oldInput: {
+      email: '',
+      password: '',
+    },
   });
 };
 
@@ -39,14 +45,37 @@ const getSignup = (req, res, next) => {
     path: '/signup',
     pageTitle: 'Signup',
     errorMessage: message,
+    //show data after error
+    oldInput: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
   });
 };
 
 const postLogin = async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = await User.findOne({ email });
 
+  //for validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(422).render('auth/login', {
+      path: '/login',
+      pageTitle: 'error',
+      errorMessage: errors.array()[0].msg,
+      //show input data after error
+      oldInput: {
+        email: req.body.email,
+        password: req.body.password,
+        confirmPassword: req.body.confirmPassword,
+      },
+    });
+  }
+
+  const user = await User.findOne({ email });
   try {
     const doMatch = await bcrypt.compare(password, user.password);
 
@@ -68,12 +97,33 @@ const postLogin = async (req, res, next) => {
 //for post => signup -->register
 const postSignup = async (req, res, next) => {
   const existUser = await User.findOne({ email: req.body.email });
+
+  //for validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(422).render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'error',
+      errorMessage: errors.array()[0].msg,
+      //show input data after error
+      oldInput: {
+        email: req.body.email,
+        password: req.body.password,
+        confirmPassword: req.body.confirmPassword,
+      },
+    });
+  }
   if (existUser) {
     req.flash('error', 'email already exist please pick another one!');
     return res.redirect('/signup');
   }
+
   try {
-    const user = new User({ ...req.body, cart: { items: [] } });
+    const user = new User({
+      ...req.body,
+      cart: { items: [] },
+    });
     const result = await user.save();
     if (result) {
       res.redirect('/login');
