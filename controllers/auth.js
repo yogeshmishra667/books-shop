@@ -30,6 +30,7 @@ const getLogin = (req, res, next) => {
       email: '',
       password: '',
     },
+    validationErrors: [],
   });
 };
 
@@ -51,13 +52,11 @@ const getSignup = (req, res, next) => {
       password: '',
       confirmPassword: '',
     },
+    validationErrors: [],
   });
 };
 
 const postLogin = async (req, res, next) => {
-  const email = req.body.email;
-  const password = req.body.password;
-
   //for validation
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -72,18 +71,21 @@ const postLogin = async (req, res, next) => {
         password: req.body.password,
         confirmPassword: req.body.confirmPassword,
       },
+      validationErrors: errors.array(),
     });
   }
 
-  const user = await User.findOne({ email });
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = await User.findOne({ email: email });
+
   try {
     const doMatch = await bcrypt.compare(password, user.password);
-
     if (doMatch) {
       req.session.isLoggedIn = true;
       req.session.user = user;
       //redirect when session is saved
-      req.session.save((error) => {
+      return req.session.save((error) => {
         console.log(error);
         res.redirect('/');
       });
@@ -112,6 +114,7 @@ const postSignup = async (req, res, next) => {
         password: req.body.password,
         confirmPassword: req.body.confirmPassword,
       },
+      validationErrors: errors.array(),
     });
   }
   if (existUser) {
