@@ -1,16 +1,37 @@
 const Product = require('../models/product');
+const { validationResult } = require('express-validator');
 
 const getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
     editing: false,
+    hasError: false,
+    errorMessage: null,
+    validationErrors: [],
   });
 };
 
 //for admin  post add product
 const postAddProduct = async (req, res, next) => {
   const product = new Product({ ...req.body, userId: req.user._id });
+
+  //for validation
+  //for validationErrors
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'error',
+      path: '/admin/edit-product',
+      editing: false,
+      hasError: false,
+      product: product,
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array(),
+    });
+  }
   try {
     const newProduct = await product.save();
     if (newProduct) {
@@ -52,6 +73,9 @@ const getEditProduct = async (req, res, next) => {
       path: '/admin/edit-product',
       editing: editMode,
       product: product,
+      hasError: false,
+      errorMessage: null,
+      validationErrors: [],
     });
   } catch (error) {
     console.log(error);
@@ -65,6 +89,22 @@ const postEditProduct = async (req, res, next) => {
   if (product.userId.toString() !== req.user._id.toString()) {
     //toString because also checking type
     return res.redirect('/');
+  }
+
+  //for input validation
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'error',
+      path: '/admin/edit-product',
+      editing: true,
+      hasError: true,
+      product: product,
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array(),
+    });
   }
   try {
     product.title = req.body.title;
