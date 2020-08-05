@@ -6,4 +6,6 @@ const getError = (req, res, next) => {
   });
 };
 
-module.exports = getError;
+module.exports = {
+  getError,
+};

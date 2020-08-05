@@ -7,6 +7,8 @@ require('./utils/database');
 const User = require('./models/user');
 const csrf = require('csurf');
 const flash = require('connect-flash');
+const { getError } = require('./controllers/error');
+const appError = require('./utils/appError');
 
 const app = express();
 
@@ -47,11 +49,13 @@ app.use(async (req, res, next) => {
   }
   try {
     const user = await User.findById(req.session.user._id);
+    if (!user) {
+      return next();
+    }
     req.user = user;
     next();
   } catch (error) {
-    console.log(error);
-    res.status(401).send(error);
+    throw new Error(error);
   }
 });
 
@@ -69,7 +73,17 @@ app.use((req, res, next) => {
 app.use('/admin', require('./routes/admin'));
 app.use(require('./routes/shop'));
 app.use(require('./routes/auth'));
-app.use(require('./controllers/error'));
+
+app.use(getError);
+
+// error handler middleware
+app.use((error, req, res, next) => {
+  res.status(500).render('500', {
+    pageTitle: 'Error!',
+    path: '/500',
+    isAuthenticated: req.session.isLoggedIn,
+  });
+});
 
 //for run express server
 const port = process.env.PORT || 3000;

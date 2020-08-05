@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
+const appError = require('../utils/appError');
 
 const getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -15,7 +16,6 @@ const getAddProduct = (req, res, next) => {
 //for admin  post add product
 const postAddProduct = async (req, res, next) => {
   const product = new Product({ ...req.body, userId: req.user._id });
-
   //for validation
   //for validationErrors
   const errors = validationResult(req);
@@ -39,8 +39,9 @@ const postAddProduct = async (req, res, next) => {
       res.redirect('/admin/products');
     }
   } catch (error) {
-    console.log(error);
-    return res.status(500).send(error);
+    // console.log(error);
+    // return res.status(500).send(error);
+    next(new appError(500, `internal error by bookApp`));
   }
 };
 
