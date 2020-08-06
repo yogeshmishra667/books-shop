@@ -8,7 +8,6 @@ const User = require('./models/user');
 const csrf = require('csurf');
 const flash = require('connect-flash');
 const { getError } = require('./controllers/error');
-const appError = require('./utils/appError');
 
 const app = express();
 
@@ -78,10 +77,13 @@ app.use(getError);
 
 // error handler middleware
 app.use((error, req, res, next) => {
-  res.status(500).render('500', {
+  res.status(error.statusCode).render('500', {
     pageTitle: 'Error!',
     path: '/500',
     isAuthenticated: req.session.isLoggedIn,
+    message: error.message,
+    status: error.status,
+    code: error.statusCode,
   });
 });
 

@@ -41,7 +41,7 @@ const postAddProduct = async (req, res, next) => {
   } catch (error) {
     // console.log(error);
     // return res.status(500).send(error);
-    next(new appError(500, `internal error by bookApp`));
+    next(new appError(500, `Some error occurred!`));
   }
 };
 
@@ -110,15 +110,16 @@ const postEditProduct = async (req, res, next) => {
   try {
     product.title = req.body.title;
     product.price = req.body.price;
-    product.imageUrl = req.body.imageUrl;
+    product.imageUrl = req.body;
     product.description = req.body.description;
     await product.save();
 
     console.log('UPDATED PRODUCT!');
     res.status(200).redirect('/admin/products');
   } catch (error) {
-    console.log('something went to wrong', error);
-    return res.status(401).send(error);
+    // console.log('something went to wrong', error);
+    // return res.status(401).send(error);
+    next(new appError(500, `Some error occurred!`));
   }
 };
 //for post => delete admin product
