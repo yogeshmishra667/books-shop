@@ -15,13 +15,34 @@ const getAddProduct = (req, res, next) => {
 
 //for admin  post add product
 const postAddProduct = async (req, res, next) => {
-  const product = new Product({ ...req.body, userId: req.user._id });
+  const image = req.file;
+  //if image is not find
+  if (!image) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/add-product',
+      editing: false,
+      hasError: true,
+      product: {
+        title: title,
+        price: price,
+        description: description,
+      },
+      errorMessage: 'Attached file is not an image.',
+      validationErrors: [],
+    });
+  }
+
+  const product = new Product({
+    ...req.body,
+    userId: req.user._id,
+    imageUrl: req.file.path,
+  });
   //for validation
   //for validationErrors
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    console.log(errors.array());
     return res.status(422).render('admin/edit-product', {
       pageTitle: 'error',
       path: '/admin/edit-product',
@@ -110,15 +131,15 @@ const postEditProduct = async (req, res, next) => {
   try {
     product.title = req.body.title;
     product.price = req.body.price;
-    product.imageUrl = req.body;
+    if (req.file) {
+      product.imageUrl = req.file.path;
+    }
     product.description = req.body.description;
-    await product.save();
 
+    await product.save();
     console.log('UPDATED PRODUCT!');
     res.status(200).redirect('/admin/products');
   } catch (error) {
-    // console.log('something went to wrong', error);
-    // return res.status(401).send(error);
     next(new appError(500, `Some error occurred!`));
   }
 };

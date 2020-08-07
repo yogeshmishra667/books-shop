@@ -3,13 +3,19 @@ const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const morgan = require('morgan');
-require('./utils/database');
-const User = require('./models/user');
 const csrf = require('csurf');
 const flash = require('connect-flash');
+const multer = require('multer');
+
+require('./utils/database');
+const User = require('./models/user');
 const { getError } = require('./controllers/error');
+const { fileStorage, fileFilter } = require('./utils/addImages');
 
 const app = express();
+
+// for csrf protection
+const csrfProtection = csrf();
 
 // Load View Engine🎑
 const viewPath = path.join(__dirname, 'views');
@@ -17,12 +23,17 @@ app.set('views', viewPath);
 app.set('view engine', 'ejs');
 
 // parse application/x-www-form-urlencoded and application/json
+
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
+);
 app.use(express.json());
 app.use(morgan('dev'));
 
-// for csrf protection
-const csrfProtection = csrf();
+//Set Public Folder 🗄
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 //for session and cookie
 app.use(
@@ -39,6 +50,13 @@ app.use(
 
 app.use(csrfProtection);
 app.use(flash());
+
+//for pass local variable in view
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 
 //create user based on session data
 app.use(async (req, res, next) => {
@@ -58,21 +76,10 @@ app.use(async (req, res, next) => {
   }
 });
 
-//Set Public Folder 🗄
-app.use(express.static(path.join(__dirname, 'public')));
-
-//for pass local variable in view
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.session.isLoggedIn;
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
-
 //routes
 app.use('/admin', require('./routes/admin'));
 app.use(require('./routes/shop'));
 app.use(require('./routes/auth'));
-
 app.use(getError);
 
 // error handler middleware
@@ -80,10 +87,10 @@ app.use((error, req, res, next) => {
   res.status(error.statusCode).render('500', {
     pageTitle: 'Error!',
     path: '/500',
-    isAuthenticated: req.session.isLoggedIn,
     message: error.message,
     status: error.status,
     code: error.statusCode,
+    isAuthenticated: req.session.isLoggedIn,
   });
 });
 

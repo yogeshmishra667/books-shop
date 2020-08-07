@@ -18,7 +18,6 @@ router.post(
     body('title', 'Please enter a valid title.')
       .isString()
       .isLength({ min: 10, max: 20 }),
-    body('imageUrl', 'Please enter a valid url.').isURL().trim(),
     body('price', 'Please enter a valid price.').isFloat().trim(),
     body('description').isLength({ min: 15, max: 200 }),
   ],
@@ -33,7 +32,7 @@ router.post(
     body('title', 'Please enter a valid title.')
       .isString()
       .isLength({ min: 10, max: 40 }),
-    body('imageUrl', 'Please enter a valid url.').isURL().trim(),
+
     body('price', 'Please enter a valid price.').isFloat().trim(),
     body('description').isLength({ min: 15, max: 200 }),
   ],
