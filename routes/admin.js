@@ -17,9 +17,9 @@ router.post(
     //validation part
     body('title', 'Please enter a valid title.')
       .isString()
-      .isLength({ min: 10, max: 20 }),
+      .isLength({ min: 10, max: 40 }),
     body('price', 'Please enter a valid price.').isFloat().trim(),
-    body('description').isLength({ min: 15, max: 200 }),
+    body('description').isLength({ min: 15, max: 400 }),
   ],
   isAuth,
   ctrl.postAddProduct
