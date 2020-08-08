@@ -1,6 +1,7 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
 const appError = require('../utils/appError');
+const fileHelper = require('../utils/file');
 
 const getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -132,6 +133,7 @@ const postEditProduct = async (req, res, next) => {
     product.title = req.body.title;
     product.price = req.body.price;
     if (req.file) {
+      fileHelper.deleteFile(req.file.path);
       product.imageUrl = req.file.path;
     }
     product.description = req.body.description;
@@ -146,8 +148,19 @@ const postEditProduct = async (req, res, next) => {
 //for post => delete admin product
 const postDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
-  await Product.deleteOne({ _id: prodId, userId: req.user._id });
+
+  //for delete image also when delete product
+  const product = await Product.findById(prodId);
+  if (!product) {
+    return next(new appError(404, 'product not found'));
+  }
+  fileHelper.deleteFile(product.imageUrl);
+
   //assign userId for delete only whose user Created
+  await Product.deleteOne({
+    _id: prodId,
+    userId: req.user._id,
+  });
   try {
     console.log('DESTROYED PRODUCT');
     res.status(201).redirect('/admin/products');
