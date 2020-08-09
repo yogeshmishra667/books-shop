@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const stripe = require('stripe')(process.env.STRIPE_TOKEN);
 
 const Product = require('../models/product');
 const Order = require('../models/order');
@@ -126,6 +127,74 @@ const getOrder = async (req, res, next) => {
   }
 };
 
+//for payment method
+const getCheckout = async (req, res, next) => {
+  let products;
+  let total = 0;
+  const user = await req.user.populate('cart.items.productId').execPopulate();
+  try {
+    products = user.cart.items;
+    total = 0;
+    products.forEach((p) => {
+      total += p.quantity * p.productId.price;
+    });
+    //create session for stripe
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: products.map((p) => {
+        return {
+          name: p.productId.title,
+          description: p.productId.description,
+          amount: p.productId.price * 100,
+          currency: 'inr',
+          quantity: p.quantity,
+        };
+      }),
+      //if payment success/fail then redirect route
+      success_url: req.protocol + '://' + req.get('host') + '/checkout/success', // => http://localhost:3000/checkout/success
+      cancel_url: req.protocol + '://' + req.get('host') + '/checkout/cancel',
+    });
+
+    if (session) {
+      res.render('shop/checkout', {
+        path: '/checkout',
+        pageTitle: 'Checkout',
+        products: products,
+        totalSum: total,
+        sessionId: session.id,
+      });
+    }
+  } catch (error) {
+    return next(new appError(500, 'something went to wrong'));
+  }
+};
+
+/*  you can also use postOrder route but i can create new route and paste postOrder code in controller */
+
+const getCheckoutSuccess = async (req, res, next) => {
+  const user = await req.user.populate('cart.items.productId').execPopulate();
+
+  try {
+    const products = user.cart.items.map((i) => {
+      return { quantity: i.quantity, product: { ...i.productId._doc } };
+    });
+    const order = new Order({
+      user: {
+        email: req.user.email,
+        userId: req.user,
+      },
+      products: products,
+    });
+    const result = await order.save();
+    if (result) {
+      return req.user.clearCart() && res.redirect('/orders');
+    }
+  } catch (error) {
+    return next(new appError(500, 'something went to wrong'));
+  }
+};
+
+//postOrder use when you can't use stripe
 //for post => order
 const postOrder = async (req, res, next) => {
   const user = await req.user.populate('cart.items.productId').execPopulate();
@@ -146,17 +215,8 @@ const postOrder = async (req, res, next) => {
       return req.user.clearCart() && res.redirect('/orders');
     }
   } catch (error) {
-    console.log(error);
-    return res.status(401).send(error);
+    return next(new appError(500, 'something went to wrong'));
   }
-};
-
-// order
-const getCheckout = (req, res, next) => {
-  res.render('shop/checkout', {
-    pageTitle: 'Cart',
-    path: '/checkout',
-  });
 };
 
 //for generate pdf
@@ -209,7 +269,8 @@ module.exports = {
   postCart,
   postCartDeleteProduct,
   getOrder,
-  postOrder,
+  getCheckoutSuccess,
+  //postOrder,
   getIndex,
   getCheckout,
   getInvoice,
